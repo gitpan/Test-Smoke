@@ -10,6 +10,58 @@ The filelists have a short symbolic indicator:
 
 Enjoy!
 ___________________________________________________________________________
+[  1303] By: abeltje                          on 2012-03-16 14:22:14 +0100
+        Log: * [MERGE]
+	     [	1302] By: abeltje		 on 2012-03-16 14:16:16
+	     +0100
+		Log: * [CHANGE] by Steve Hay and Father Chrysostomos
+		  - rt.cpan.org #75673: Support sendEmail to make it
+		    easier emailing from Win32
+		  - rt.cpan.org #75681: Clean up leftover temporary file
+		    in test suite
+		  - rt.cpan.org #63073: Bleadperl 9aa8b00 breaks
+		    ABELTJE/Test-Smoke-1.44
+        Url: https://source.test-smoke.org/svn/branches/Test-Smoke-1.30.xx
+           ! /branches/Test-Smoke-1.30.xx,
+	     /branches/Test-Smoke-1.30.xx/configsmoke.pl,
+	     /branches/Test-Smoke-1.30.xx/lib/Test/Smoke/Mailer.pm,
+	     /branches/Test-Smoke-1.30.xx/lib/Test/Smoke.pm,
+	     /branches/Test-Smoke-1.30.xx/mailrpt.pl,
+	     /branches/Test-Smoke-1.30.xx/t/reporter.t
+___________________________________________________________________________
+[  1300] By: abeltje                          on 2011-11-15 11:52:23 +0100
+        Log: * [AUTOCOMMIT]
+	       * Regenerate 'Changes'
+        Url: https://source.test-smoke.org/svn/branches/Test-Smoke-1.30.xx
+           ! /branches/Test-Smoke-1.30.xx/Changes
+___________________________________________________________________________
+[  1299] By: abeltje                          on 2011-11-15 11:51:04 +0100
+        Log: * [AUTOCOMMIT]
+	       * Regenerate 'Changes'
+        Url: https://source.test-smoke.org/svn/branches/Test-Smoke-1.30.xx
+           ! /branches/Test-Smoke-1.30.xx/Changes
+___________________________________________________________________________
+[  1298] By: abeltje                          on 2011-11-15 11:48:03 +0100
+        Log: * Up the version to 1.45
+        Url: https://source.test-smoke.org/svn/branches/Test-Smoke-1.30.xx
+           ! /branches/Test-Smoke-1.30.xx/lib/Test/Smoke.pm
+___________________________________________________________________________
+[  1297] By: abeltje                          on 2011-11-15 11:39:47 +0100
+        Log: * [CHANGE] various patches
+	       + fix calling tie() on file-handle (Father Chrysostomos)
+	       + fix Number of CPU's on Lion (Reini Urban)
+	       + fix syncer_rsync.t, use abs_path() to resolve symlinks
+        Url: https://source.test-smoke.org/svn/branches/Test-Smoke-1.30.xx
+           ! /branches/Test-Smoke-1.30.xx/lib/Test/Smoke/SysInfo.pm,
+	     /branches/Test-Smoke-1.30.xx/t/syncer_rsync.t,
+	     /branches/Test-Smoke-1.30.xx/t/sysinfo_proc.t
+___________________________________________________________________________
+[  1286] By: abeltje                          on 2010-11-04 19:10:16 +0100
+        Log: * [AUTOCOMMIT]
+	       * Regenerate 'Changes'
+        Url: https://source.test-smoke.org/svn/branches/Test-Smoke-1.30.xx
+           ! /branches/Test-Smoke-1.30.xx/Changes
+___________________________________________________________________________
 [  1284] By: abeltje                          on 2010-11-01 19:12:17 +0100
         Log: * [MERGE]
 	     [	1280] By: tux		    on 2010-08-08 13:44:20 +0200

@@ -1,7 +1,7 @@
 package Test::Smoke::SysInfo;
 use strict;
 
-# $Id: SysInfo.pm 1284 2010-11-01 18:12:17Z abeltje $
+# $Id: SysInfo.pm 1297 2011-11-15 10:39:47Z abeltje $
 use vars qw( $VERSION @EXPORT_OK );
 $VERSION = '0.042';
 
@@ -411,6 +411,7 @@ sub Darwin {
         'Model Name'           => 'Machine Name',
         'Model Identifier'     => 'Machine Model',
         'Number Of Processors' => 'Number Of CPUs',
+        'Number of Processors' => 'Number Of CPUs', # 10.7 Lion changed case
     );
     for my $newkey ( keys %keymap ) {
         my $oldkey = $keymap{ $newkey };

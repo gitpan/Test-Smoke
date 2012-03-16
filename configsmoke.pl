@@ -18,7 +18,7 @@ use lib File::Spec->catdir( $findbin, 'inc' );
 use Test::Smoke::Util qw( do_pod2usage whereis );
 use Test::Smoke::SysInfo;
 
-# $Id: configsmoke.pl 1241 2009-08-10 09:02:46Z abeltje $
+# $Id: configsmoke.pl 1303 2012-03-16 13:22:14Z abeltje $
 use vars qw( $VERSION $conf );
 $VERSION = '0.072';
 
@@ -525,6 +525,17 @@ EOT
                "\nLeave empty to use local sendmail",
         alt => [ ],
         dft => 'localhost',
+    },
+    muser => {
+        msg => 'Which username should be used for the SMTP server?',
+        alt => [ ],
+        dft => '',
+    },
+    mpass => {
+        msg => 'Which password should be used for the SMTP server?' .
+               "\nLeave empty to be prompted when sending email",
+        alt => [ ],
+        dft => '',
     },
 
     to => {
@@ -1224,6 +1235,20 @@ MAIL: {
             $config{ $arg } = prompt( $arg );
 	};
 
+        /^sendemail$/       && do {
+            $arg = 'from';
+            $config{ $arg } = prompt( $arg );
+
+            $arg = 'mserver';
+            $config{ $arg } = prompt( $arg );
+
+            $arg = 'muser';
+            $config{ $arg } = prompt( $arg );
+
+            $arg = 'mpass';
+            $config{ $arg } = prompt( $arg );
+	};
+
         /^(?:Mail::Sendmail|MIME::Lite)$/ && do {
             $arg = 'from';
             $opt{ $arg }{chk} = '\S+';
@@ -1677,7 +1702,7 @@ sub sort_configkeys {
         qw( force_c_locale locale defaultenv ),
 
         # Report related
-        qw( mail mail_type mserver from to ccp5p_onfail
+        qw( mail mail_type mserver muser mpass from to ccp5p_onfail
             swcc cc swbcc bcc ),
 
         # Archive reports and logfile
@@ -2171,6 +2196,8 @@ sub get_avail_mailers {
         local $ENV{PATH} = "$ENV{PATH}$Config{path_sep}/usr/sbin";
         $map{ $mailer } = whereis( $mailer );
     }
+    $mailer = 'sendemail';
+    $map{ $mailer } = whereis( $mailer );
 
     eval { require Mail::Sendmail };
     $map{ 'Mail::Sendmail' } = $@ ? '' : 'Mail::Sendmail';
@@ -2415,7 +2442,7 @@ Schedule, logfile optional
 
 In case I forget to update the C<$VERSION>:
 
-    $Id: configsmoke.pl 1241 2009-08-10 09:02:46Z abeltje $
+    $Id: configsmoke.pl 1303 2012-03-16 13:22:14Z abeltje $
 
 =head1 COPYRIGHT
 
