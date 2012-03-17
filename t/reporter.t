@@ -2,7 +2,7 @@
 use strict;
 $| = 1;
 
-# $Id: reporter.t 1303 2012-03-16 13:22:14Z abeltje $
+# $Id: reporter.t 1307 2012-03-17 17:39:01Z abeltje $
 
 use File::Spec::Functions;
 my $findbin;
@@ -2110,7 +2110,7 @@ EORESULTS
             $in_string .= $_;
         }
         is($in_string, $report_string, "file is the same as the report");
-        close $file;
+        close $in;
         unlink $file or die "Can't unlink file: $!";
     }
     else {

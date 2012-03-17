@@ -1,10 +1,10 @@
 #! /usr/bin/perl -w
 use strict;
 
-# $Id: syncer_rsync.t 1297 2011-11-15 10:39:47Z abeltje $
+# $Id: syncer_rsync.t 1307 2012-03-17 17:39:01Z abeltje $
 
 use Data::Dumper;
-use Cwd;
+use Cwd qw/cwd abs_path/;
 use Test::More tests => 33;
 
 use_ok( 'Test::Smoke::Syncer' );
@@ -13,7 +13,9 @@ my %df_rsync = (
     rsync => 'rsync',
     source => 'public.activestate.com::perl-current',
     opts   => '-az --delete',
-    ddir   => Cwd::abs_path('perl-current'),
+    ddir   => File::Spec->canonpath(
+        File::Spec->rel2abs('perl-current', abs_path(cwd()))
+    ),
 );
 
 {
@@ -29,7 +31,7 @@ my %df_rsync = (
 {
     my %rsync = %df_rsync;
     $rsync{source} = 'ftp.linux.ActiveState.com::perl-current'; 
-    $rsync{ddir}   = Cwd::abs_path(cwd());
+    $rsync{ddir}   = File::Spec->canonpath(abs_path(cwd()));
     my $sync = eval { 
         Test::Smoke::Syncer->new( 'rsync', 
             source => $rsync{source},
@@ -49,7 +51,7 @@ my %df_rsync = (
 {
     my %rsync = %df_rsync;
     $rsync{source} = 'ftp.linux.ActiveState.com::perl-current'; 
-    $rsync{ddir}   = Cwd::abs_path(cwd());
+    $rsync{ddir}   = File::Spec->canonpath(abs_path(cwd()));
     my $sync = eval { 
         Test::Smoke::Syncer->new( rsync => {
             source => $rsync{source},

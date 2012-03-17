@@ -1,7 +1,7 @@
 package Test::Smoke::Syncer;
 use strict;
 
-# $Id: Syncer.pm 1285 2010-11-04 18:06:52Z abeltje $
+# $Id: Syncer.pm 1307 2012-03-17 17:39:01Z abeltje $
 use vars qw( $VERSION );
 $VERSION = '0.027';
 
@@ -154,7 +154,7 @@ sub new {
     my $proto = shift;
     my $class = ref $proto ? ref $proto : $proto;
 
-    my $sync_type = lc shift || $CONFIG{df_sync};
+    my $sync_type = lc(shift || $CONFIG{df_sync});
 
     unless ( exists $CONFIG{valid_type}->{$sync_type} ) {
         require Carp;

@@ -10,6 +10,31 @@ The filelists have a short symbolic indicator:
 
 Enjoy!
 ___________________________________________________________________________
+[  1309] By: abeltje                          on 2012-03-17 18:42:15 +0100
+        Log: * [CHANGE]
+	       - Up the version.
+        Url: https://source.test-smoke.org/svn/branches/Test-Smoke-1.30.xx
+           ! /branches/Test-Smoke-1.30.xx/Changes,
+	     /branches/Test-Smoke-1.30.xx/lib/Test/Smoke.pm
+___________________________________________________________________________
+[  1307] By: abeltje                          on 2012-03-17 18:39:01 +0100
+        Log: * [MERGE] from ts-current
+	     [	1305] By: abeltje		 on 2012-03-17 17:50:49
+	     +0100
+		Log: * [FIX] By Steve Hay
+		  - rt.cpan.org #75681: Wrongly integrated, corrected
+	     [	1306] By: abeltje		 on 2012-03-17 18:29:13
+	     +0100
+		Log: * [CHANGE] by Steve Hay
+		  - rt.cpan.org #75842: mix of the old and the new, so
+		    both Windows and OS X with symlinks are happy.
+        Url: https://source.test-smoke.org/svn/branches/Test-Smoke-1.30.xx
+           ! /branches/Test-Smoke-1.30.xx,
+	     /branches/Test-Smoke-1.30.xx/Changes,
+	     /branches/Test-Smoke-1.30.xx/lib/Test/Smoke/Syncer.pm,
+	     /branches/Test-Smoke-1.30.xx/t/reporter.t,
+	     /branches/Test-Smoke-1.30.xx/t/syncer_rsync.t
+___________________________________________________________________________
 [  1303] By: abeltje                          on 2012-03-16 14:22:14 +0100
         Log: * [MERGE]
 	     [	1302] By: abeltje		 on 2012-03-16 14:16:16
