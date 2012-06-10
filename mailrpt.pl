@@ -2,7 +2,7 @@
 use strict;
 $| = 1;
 
-# $Id: mailrpt.pl 1303 2012-03-16 13:22:14Z abeltje $
+# $Id: mailrpt.pl 1302 2012-03-16 13:16:16Z abeltje $
 use vars qw( $VERSION );
 $VERSION = '0.017';
 

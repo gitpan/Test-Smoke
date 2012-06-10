@@ -1,7 +1,7 @@
 package Test::Smoke::SourceTree;
 use strict;
 
-# $Id: SourceTree.pm 890 2005-07-31 10:45:15Z abeltje $
+# $Id: SourceTree.pm 1282 2010-08-29 21:19:49Z abeltje $
 use vars qw( $VERSION @EXPORT_OK %EXPORT_TAGS $NOCASE );
 $VERSION = '0.008';
 
@@ -182,7 +182,7 @@ sub check_MANIFEST {
     my %ignore = map {
         my $entry = $NOCASE ? uc $_ : $_;
         $entry => undef 
-    } ( ".patch", "MANIFEST.SKIP", @_ ), 
+    } ( ".patch", "MANIFEST.SKIP", '.gitignore', @_ ), 
       keys %{ $self->_read_mani_file( 'MANIFEST.SKIP', 1 ) };
 
     # Walk the tree, remove all found files from %manifest

@@ -1,7 +1,7 @@
 #! perl -w
 use strict;
 
-# $Id: skip_filter.t 1246 2009-10-21 16:54:39Z abeltje $
+# $Id: skip_filter.t 1245 2009-10-20 20:04:34Z abeltje $
 
 # Add the test-lines in the '    EOT' here-document
 # First char should be 'P' for PASS (we don't want it)

@@ -1,10 +1,11 @@
 #! /usr/bin/perl -w
 use strict;
 
-# $Id: syncer_rsync.t 1307 2012-03-17 17:39:01Z abeltje $
+# $Id: syncer_rsync.t 1306 2012-03-17 17:29:13Z abeltje $
 
 use Data::Dumper;
 use Cwd qw/cwd abs_path/;
+use File::Spec;
 use Test::More tests => 33;
 
 use_ok( 'Test::Smoke::Syncer' );

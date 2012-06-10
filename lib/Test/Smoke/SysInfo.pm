@@ -1,7 +1,7 @@
 package Test::Smoke::SysInfo;
 use strict;
 
-# $Id: SysInfo.pm 1297 2011-11-15 10:39:47Z abeltje $
+# $Id: SysInfo.pm 1311 2012-03-18 08:13:43Z abeltje $
 use vars qw( $VERSION @EXPORT_OK );
 $VERSION = '0.042';
 
@@ -385,7 +385,7 @@ sub BSD {
 =head2 Darwin( )
 
 If the L<system_profiler> program is accessible (meaning that this is
-Mac OS X), use it to find information; otherwise treat as L</BSD>.
+Mac OS X), use it to find information; otherwise treat as L</BSD( )>.
 
 This sub was donated by Dominic Dunlup.
 
@@ -411,7 +411,6 @@ sub Darwin {
         'Model Name'           => 'Machine Name',
         'Model Identifier'     => 'Machine Model',
         'Number Of Processors' => 'Number Of CPUs',
-        'Number of Processors' => 'Number Of CPUs', # 10.7 Lion changed case
     );
     for my $newkey ( keys %keymap ) {
         my $oldkey = $keymap{ $newkey };
@@ -785,9 +784,9 @@ See:
 
 =over 4
 
-=item * http://www.perl.com/perl/misc/Artistic.html
+=item * L<http://www.perl.com/perl/misc/Artistic.html>
 
-=item * http://www.gnu.org/copyleft/gpl.html
+=item * L<http://www.gnu.org/copyleft/gpl.html>
 
 =back
 

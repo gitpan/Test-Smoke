@@ -1,7 +1,7 @@
 package Test::Smoke::Util;
 use strict;
 
-# $Id: Util.pm 1246 2009-10-21 16:54:39Z abeltje $
+# $Id: Util.pm 1359 2012-04-18 19:57:29Z abeltje $
 use vars qw( $VERSION @EXPORT @EXPORT_OK $NOCASE );
 $VERSION = '0.58';
 
@@ -402,7 +402,7 @@ sub grepccmsg {
             # ------^
             '(^cc: (?:Warning|Error): .+?^-*\^$)',
 
-       'hpux' =>
+        'hpux' =>
             # cc: "foo.c"" line nnn: warning ppp: ...error description...
             # cc: "foo.c"" line nnn: error ppp: ...error description...
             '(^cc: ".+?", line \d+: (?:warning|error) \d+: .+?$)',
@@ -478,18 +478,21 @@ sub grepccmsg {
         $error{ "Couldn't examine '$logfile' for compiler warnings." } = 1;
     }
 
-    $error{ $1 } ||= $indx++ while $smokelog =~ /$pat/mg;
+    while ($smokelog =~ m/$pat/mg) {
+        (my $msg = $1) =~ s/^\s+//;
+        $msg =~ s/[\s\r\n]+\Z//;
 
-    # I need to think about this IRIX/$Config{cc} thing
-#    if ($cc eq 'irix') {
-#        if ($Config{cc} =~ /-n32|-64/) {
-#    	     delete @error{ grep { /cc-(?:1009|1110|1047) / } keys %error };
-#        }
-#    }
+        # Skip known junk from Configure
+        $msg =~ m{^try\.c:[ :0-9]+\bwarning:} and next;
 
-    my @errors = map {
-        chomp; $_;
-    } sort { $error{ $a } <=> $error{ $b } } keys %error;
+        # We need to think about this IRIX/$Config{cc} thing
+        # $cc eq "irix" && $Config{cc} =~ m/-n32|-64/ &&
+        #     $msg =~ m/cc-(?:1009|1110|1047) / and next;
+
+        $error{ $msg } ||= $indx++;
+    }
+
+    my @errors = sort { $error{ $a } <=> $error{ $b } } keys %error;
 
     return wantarray ? @errors : \@errors;
 }

@@ -1,7 +1,7 @@
 #! perl -w
 use strict;
 
-# $Id: get_patch.t 1235 2009-02-08 11:32:39Z abeltje $
+# $Id: get_patch.t 1225 2009-01-25 14:32:25Z abeltje $
 
 use File::Spec;
 use File::Copy;

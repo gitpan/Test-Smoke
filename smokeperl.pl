@@ -1,22 +1,26 @@
-#! /usr/bin/perl -w
+#!/usr/bin/perl -w
+
+eval 'exec /usr/bin/perl -w -S $0 ${1+"$@"}'
+    if 0; # not running under some shell
 use strict;
 $|=1;
 
-# $Id: smokeperl.pl 1217 2008-12-30 08:51:27Z abeltje $
+# $Id: smokeperl.pl 1363 2012-05-10 21:21:26Z abeltje $
 use vars qw( $VERSION );
 $VERSION = Test::Smoke->VERSION;
 
 use Cwd;
-use File::Spec;
+use File::Spec::Functions qw(:DEFAULT rel2abs);
 use File::Path;
 use File::Copy;
 my $findbin;
 use File::Basename;
-BEGIN { $findbin = File::Spec->rel2abs( dirname $0 ); }
-use lib File::Spec->catdir( $findbin, 'lib' );
-use lib File::Spec->catdir( $findbin, 'lib', 'inc' );
+BEGIN { $findbin = rel2abs(dirname $0); }
+use lib catdir($findbin, 'lib');
+use lib catdir($findbin, 'lib', 'inc');
 use lib $findbin;
-use lib File::Spec->catdir( $findbin, 'inc' );
+use lib catdir($findbin, 'inc');
+
 use Config;
 use Test::Smoke::Syncer;
 use Test::Smoke::Patcher;
@@ -34,6 +38,9 @@ my %options = (
     fetch        => 1,
     patch        => 1,
     mail         => undef,
+    smokedb_url  => undef,
+    send_out     => "never",
+    send_log     => "on_fail",
     archive      => undef,
     continue     => 0,
     ccp5p_onfail => undef,
@@ -53,6 +60,7 @@ GetOptions( \%options,
     'patch!',
     'ccp5p_onfail!',
     'mail!',
+    'smokedb_url=s',
     'delay_report!',
     'run!',
     'archive!',
@@ -120,9 +128,9 @@ front-ends internally and does some sanity checking.
 =cut
 
 # Try cwd() first, then $findbin
-my $config_file = File::Spec->catfile( cwd(), $options{config} );
+my $config_file = catfile( cwd(), $options{config} );
 unless ( read_config( $config_file ) ) {
-    $config_file = File::Spec->catfile( $findbin, $options{config} );
+    $config_file = catfile( $findbin, $options{config} );
     read_config( $config_file );
 }
 defined Test::Smoke->config_error and 
@@ -134,17 +142,19 @@ defined $options{fetch} && !$options{fetch} && !defined $options{smartsmoke}
 
 # Correction for backward compatability
 !defined $options{ $_ } && !exists $conf->{ $_ } and $options{ $_ } = 1
-    for qw( run fetch patch mail archive v );
+    for qw( run fetch patch archive v );
 !defined $options{ $_ } && !exists $conf->{ $_ } and $options{ $_ } = 0
-    for qw( delay_report );
+    for qw( delay_report mail );
 
 # Make command-line options override configfile
 defined $options{ $_ } and $conf->{ $_ } = $options{ $_ }
-    for qw( is56x defaultenv continue killtime pfile cfg delay_report
-            smartsmoke run fetch patch mail ccp5p_onfail archive v );
+    for qw( is56x defaultenv continue killtime pfile cfg delay_report v run
+            smartsmoke fetch patch mail smokedb_url ccp5p_onfail archive );
 
 # Make sure the --pfile command-line override works
 $options{pfile} and $conf->{patch_type} ||= 'multi';
+
+$options{transport} or $conf->{transport_url} = undef;
 
 if ( $options{continue} ) {
     $options{v} and print "Will try to continue current smoke\n";
@@ -158,8 +168,7 @@ chdir $conf->{ddir} or die "Cannot chdir($conf->{ddir}): $!";
 call_mktest( $cwd );
 chdir $cwd;
 unless ( $conf->{delay_report} ) {
-    genrpt();
-    mailrpt();
+    sendrpt(genrpt());
 } else {
     $conf->{v} and print "Delayed creation of the report. See 'mailrpt.pl'\n";
 }
@@ -175,6 +184,9 @@ sub synctree {
             $conf->{v} and print "Skipping synctree\n";
             last FETCHTREE;
         }
+        # TODO: It might be very useful to do a 'make distclean'
+        # *before* syncing the tree, as the sync might update MANIFEST
+        # and make distclean will not see leftovers
         if ( $options{snapshot} ) {
             if ( $conf->{sync_type} eq 'snapshot' ||
                ( $conf->{sync_type} eq 'forest'   && 
@@ -227,8 +239,7 @@ sub call_mktest {
     $timeout and local $SIG{ALRM} = sub {
         warn "This smoke is aborted ($conf->{killtime})\n";
         chdir $cwd;
-        genrpt();
-        mailrpt();
+        sendrpt(genrpt());
         exit(42);
     };
     $Config{d_alarm} and alarm $timeout;
@@ -240,15 +251,40 @@ sub genrpt {
     return unless $options{run};
     my $reporter = Test::Smoke::Reporter->new( $conf );
     $reporter->write_to_file;
+    return $reporter;
 }
 
-sub mailrpt {
-    unless ( $conf->{mail} && $options{run} ) {
-        $conf->{v} and print "Skipping mailrpt\n";
+sub sendrpt {
+    my $reporter = shift;
+
+    unless ( $options{run} ) {
+        $conf->{v} and print "Skipping mailrpt and transport\n";
         return;
     }
-    my $mailer = Test::Smoke::Mailer->new( $conf->{mail_type}, $conf );
-    $mailer->mail or warn "[$conf->{mail_type}] " . $mailer->error;
+
+    if ( $conf->{mail} ) {
+        my $mailer = Test::Smoke::Mailer->new( $conf->{mail_type}, $conf );
+        $mailer->mail or warn "[$conf->{mail_type}] " . $mailer->error;
+    }
+    else {
+        $conf->{v} and print "Skipping mailrpt\n";
+    }
+
+    if ($conf->{smokedb_url}) {
+        require LWP::UserAgent;
+        my $ua = LWP::UserAgent->new(
+            agent => "Test::Smoke/$Test::Smoke::VERSION",
+        );
+        $conf->{v} and print "Posting to SmokeDB ($conf->{smokedb_url})\n";
+        my $response = $ua->post(
+            $conf->{smokedb_url},
+            {json => $reporter->smokedb_data}
+        );
+        $conf->{v} and print $response->content;
+    }
+    else {
+        $conf->{v} and print "Skipping smokedb_send\n";
+    }
 }
 
 sub archiverpt {
@@ -267,10 +303,10 @@ sub archiverpt {
         my $archived_rpt = "rpt${patch_level}.rpt";
         # Do not archive if it is already done
         last SKIP_RPT
-            if -f File::Spec->catfile( $conf->{adir}, $archived_rpt );
+            if -f catfile( $conf->{adir}, $archived_rpt );
 
-        copy( File::Spec->catfile( $conf->{ddir}, 'mktest.rpt' ),
-              File::Spec->catfile( $conf->{adir}, $archived_rpt ) ) or
+        copy( catfile( $conf->{ddir}, 'mktest.rpt' ),
+              catfile( $conf->{adir}, $archived_rpt ) ) or
             die "Cannot copy to '$archived_rpt': $!";
     }
 
@@ -278,10 +314,10 @@ sub archiverpt {
         my $archived_out = "out${patch_level}.out";
         # Do not archive if it is already done
         last SKIP_OUT
-            if -f File::Spec->catfile( $conf->{adir}, $archived_out );
+            if -f catfile( $conf->{adir}, $archived_out );
 
-        copy( File::Spec->catfile( $conf->{ddir}, 'mktest.out' ),
-              File::Spec->catfile( $conf->{adir}, $archived_out ) ) or
+        copy( catfile( $conf->{ddir}, 'mktest.out' ),
+              catfile( $conf->{adir}, $archived_out ) ) or
             die "Cannot copy to '$archived_out': $!";
     }
 
@@ -291,8 +327,18 @@ sub archiverpt {
         last SKIP_LOG 
             unless -f $conf->{lfile};
         copy( $conf->{lfile},
-              File::Spec->catfile( $conf->{adir}, $archived_log ) ) or
+              catfile( $conf->{adir}, $archived_log ) ) or
             die "Cannot copy to '$archived_log': $!";
+    }
+
+    SKIP_JSN: {
+        my $archived_jsn = "out${patch_level}.jsn";
+        last SKIP_JSN
+            if -f catfile($conf->{adir}, $archived_jsn);
+        copy(
+            catfile($conf->{ddir}, 'mktest.jsn'),
+            catfile($conf->{adir}, $archived_jsn)
+        ) or die "Cannot copy to $archived_jsn: $!";
     }
 }
 
@@ -315,7 +361,7 @@ L<README>, L<FAQ>, L<configsmoke.pl>, L<mktest.pl>, L<mkovz.pl>
 
 =head1 REVISION
 
-$Id: smokeperl.pl 1217 2008-12-30 08:51:27Z abeltje $
+$Id: smokeperl.pl 1363 2012-05-10 21:21:26Z abeltje $
 
 =head1 COPYRIGHT
 

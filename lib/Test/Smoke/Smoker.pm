@@ -1,7 +1,7 @@
 package Test::Smoke::Smoker;
 use strict;
 
-# $Id: Smoker.pm 1267 2010-01-20 21:29:58Z abeltje $
+# $Id: Smoker.pm 1311 2012-03-18 08:13:43Z abeltje $
 use vars qw( $VERSION );
 $VERSION = '0.045';
 
@@ -90,6 +90,8 @@ Test::Smoke::Smoker - OO interface to do one smoke cycle.
     }
 
 =head1 DESCRIPTION
+
+The Test::Smoke::Smoker module, an OO interface to do one smoke cycle.
 
 =head1 METHODS
 
@@ -855,7 +857,7 @@ sub make_minitest {
 
 =item $self->_parse_harness_output( $\%notok, $all_ok, @lines )
 
-Fator out the parsing of the Test::Harness output, as it seems subject
+Factor out the parsing of the Test::Harness output, as it seems subject
 to change.
 
 =cut
@@ -1002,11 +1004,15 @@ sub _normalize_testname {
             ? catfile( updir(), $test_name )
             : catfile( updir(), 't', $test_name );
     }
+
     my $test_base = catdir( $self->{ddir}, 'pod' );
     $test_name = rel2abs( $test_name, $test_base );
 
     my $test_path = abs2rel( $test_name, $test_base );
     $test_path =~ tr!\\!/! if $self->{is_win32};
+
+    # sometimes ../t is optimized away
+    $test_path !~ m|^\.\.[\\/]| and $test_path = "../t/$test_path";
 
     return $test_path;
 }
@@ -1245,9 +1251,9 @@ See:
 
 =over 4
 
-=item * http://www.perl.com/perl/misc/Artistic.html
+=item * L<http://www.perl.com/perl/misc/Artistic.html>
 
-=item * http://www.gnu.org/copyleft/gpl.html
+=item * L<http://www.gnu.org/copyleft/gpl.html>
 
 =back
 
