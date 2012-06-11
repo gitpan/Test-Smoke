@@ -2,7 +2,7 @@
 use strict;
 $| = 1;
 
-# $Id: smokestatus.pl 1366 2012-06-10 11:22:01Z abeltje $
+# $Id: smokestatus.pl 1369 2012-06-11 20:52:54Z abeltje $
 use vars qw( $VERSION );
 $VERSION = '0.014';
 
@@ -97,14 +97,14 @@ my %save_opt = %opt;
 my @configs = $opt{all} 
     ? get_configs() : $opt{running} ? get_lcks() : $opt{config};
 
+print "$0-$VERSION Test::Smoke-$Test::Smoke::VERSION Test::Smoke::Reporter-$Test::Smoke::Reporter::VERSION\n\n";
+
 foreach my $config ( @configs ) {
     %opt = %save_opt;
     $opt{config} = $config;
     process_args();
     print "\n" unless $config eq $configs[0];
     my $pver = $opt{perl_version} ? " ($opt{perl_version})" : "";
-    print "$0-$VERSION Test::Smoke-$Test::Smoke::VERSION " .
-          "Test::Smoke::Reporter-$Test::Smoke::Reporter::VERSION\n";
     print "Checking status for configuration '$opt{config}'$pver\n";
     my $rpt  = parse_out( { ddir => $opt{ddir} } ) or do {
         guess_status( $opt{ddir}, $opt{adir}, $opt{config} );

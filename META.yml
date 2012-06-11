@@ -19,5 +19,7 @@ no_index:
     - inc
 requires:
   File::Spec: 0.82
+  JSON: 0
+  LWP::UserAgent: 0
   Test::More: 0
-version: 1.50
+version: 1.52
