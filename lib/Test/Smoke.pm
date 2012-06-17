@@ -1,9 +1,9 @@
 package Test::Smoke;
 use strict;
 
-# $Id: Smoke.pm 1372 2012-06-11 21:01:22Z abeltje $
+# $Id: Smoke.pm 1374 2012-06-17 11:36:11Z abeltje $
 use vars qw( $VERSION $REVISION $conf @EXPORT );
-$VERSION  = '1.52';
+$VERSION  = '1.53';
 $REVISION = __get_ts_patchlevel();
 
 use base 'Exporter';
@@ -212,7 +212,7 @@ use FindBin;
 use File::Spec::Functions;
 
 sub __get_ts_patchlevel {
-    my( $rev ) = q$Rev: 1372 $ =~ /(\d+)/;
+    my( $rev ) = q$Rev: 1374 $ =~ /(\d+)/;
     if ( ! $rev && -d '.git' ) {
        chomp( $rev = `git describe --all --long` );
     }
@@ -231,7 +231,7 @@ sub __get_ts_patchlevel {
 
 =head1 REVISION
 
-$Id: Smoke.pm 1372 2012-06-11 21:01:22Z abeltje $
+$Id: Smoke.pm 1374 2012-06-17 11:36:11Z abeltje $
 
 =head1 COPYRIGHT
 

@@ -1,4 +1,5 @@
-MANIFEST	$Id: MANIFEST 1363 2012-05-10 21:21:26Z abeltje $
+MANIFEST	$Id: MANIFEST 1374 2012-06-17 11:36:11Z abeltje $
+MANIFEST.SKIP
 README
 ReleaseNotes
 Changes
@@ -9,6 +10,7 @@ configsmoke.pl
 mailrpt.pl
 patchtree.pl
 runsmoke.pl
+sendrpt.pl
 smokeperl.pl
 smokestatus.pl
 synctree.pl
