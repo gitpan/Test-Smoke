@@ -1,7 +1,7 @@
 package Test::Smoke::Smoker;
 use strict;
 
-# $Id: Smoker.pm 1311 2012-03-18 08:13:43Z abeltje $
+# $Id$
 use vars qw( $VERSION );
 $VERSION = '0.045';
 

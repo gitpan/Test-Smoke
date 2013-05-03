@@ -1,7 +1,7 @@
 #! /usr/bin/perl -w
 use strict;
 
-# $Id: patcher_forest.t 1287 2011-04-14 18:48:45Z abeltje $
+# $Id$
 
 use File::Spec::Functions;
 my $findbin;

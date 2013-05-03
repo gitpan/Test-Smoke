@@ -1,7 +1,7 @@
 package Test::Smoke::Util;
 use strict;
 
-# $Id: Util.pm 1359 2012-04-18 19:57:29Z abeltje $
+# $Id$
 use vars qw( $VERSION @EXPORT @EXPORT_OK $NOCASE );
 $VERSION = '0.58';
 
@@ -17,7 +17,7 @@ use base 'Exporter';
     &grepccmsg &get_local_patches &set_local_patch
     &get_ncpu &get_smoked_Config &parse_report_Config 
     &get_regen_headers &run_regen_headers
-    &whereis &clean_filename
+    &whereis &clean_filename &read_logfile
     &calc_timeout &time_in_hhmm
     &do_pod2usage
     &set_vms_rooted_logical
@@ -25,6 +25,7 @@ use base 'Exporter';
 
 use Text::ParseWords;
 use File::Spec::Functions;
+use Encode qw ( decode );
 use File::Find;
 use Cwd;
 
@@ -39,9 +40,7 @@ Test::Smoke::Util - Take out some of the functions of the smoke suite.
 I've taken out some of the general stuff and put it here.
 Now I can write some tests!
 
-=over
-
-=item Configure_win32( $command[, $win32_maker[, @args]] )
+=head2 Configure_win32( $command[, $win32_maker[, @args]] )
 
 C<Configure_win32()> alters the settings of the makefile for MSWin32.
 
@@ -166,16 +165,16 @@ sub Configure_win32 {
 
     local $_;
     my %opt_map = (
-	"-Dusethreads"		=> "USE_ITHREADS",
-	"-Duseithreads"		=> "USE_ITHREADS",
-	"-Duseperlio"		=> "USE_PERLIO",
-	"-Dusemultiplicity"	=> "USE_MULTI",
-	"-Duseimpsys"		=> "USE_IMP_SYS",
-	"-Uuseimpsys"		=> "USE_IMP_SYS",
+        "-Dusethreads"          => "USE_ITHREADS",
+        "-Duseithreads"         => "USE_ITHREADS",
+        "-Duseperlio"           => "USE_PERLIO",
+        "-Dusemultiplicity"     => "USE_MULTI",
+        "-Duseimpsys"           => "USE_IMP_SYS",
+        "-Uuseimpsys"           => "USE_IMP_SYS",
         "-Dusemymalloc"         => "PERL_MALLOC",
         "-Duselargefiles"       => "USE_LARGE_FILES",
         "-Uuseshrplib"          => "BUILD_STATIC",
-	"-DDEBUGGING"		=> "USE_DEBUGGING",
+        "-DDEBUGGING"           => "USE_DEBUGGING",
         "-DINST_DRV"            => "INST_DRV",
         "-DINST_TOP"            => "INST_TOP",
         "-DINST_VER"            => "INST_VER",
@@ -315,7 +314,7 @@ sub Configure_win32 {
     return $out;
 } # Configure_win32
 
-=item set_vms_rooted_logical( $logical, $dir )
+=head2 set_vms_rooted_logical( $logical, $dir )
 
 This will set a VMS rooted logical like:
 
@@ -355,7 +354,7 @@ COMMAND
     return $result == 0;
 }
 
-=item get_cfg_filename( )
+=head2 get_cfg_filename( )
 
 C<get_cfg_filename()> tries to find a B<cfg file> and returns it.
 
@@ -376,7 +375,32 @@ sub get_cfg_filename {
     return undef;
 }
 
-=item grepccmsg( $cc, $logfile, $verbose )
+=head2 read_logfile( )
+
+Read the logfile. If an argument is passed, force to (re)read the log
+If no argument is passed, return the stored log if available otherwise
+read the logfile
+
+=cut
+
+sub read_logfile
+{
+    my ($self, $logfile) = @_;
+
+    !$logfile && $self && $self->{log_file} and return $self->{log_file};
+
+    $logfile ||= $self->{lfile} or return undef;
+    open my $fh, "<", $logfile  or return undef;
+
+    local $/;
+    my $log = <$fh>;
+    my $es; eval { $es = decode( "utf-8",  $log, Encode::FB_CROAK ); };
+    $@ and  eval { $es = decode( "cp1252", $log, Encode::FB_CROAK ); };
+    close $fh;
+    return($@ ? $log : $es);
+}
+
+=head2 grepccmsg( $cc, $logfile, $verbose )
 
 This is a port of Jarkko Hietaniemi's grepccerr script.
 
@@ -466,12 +490,10 @@ sub grepccmsg {
 
     my( $indx, %error ) = ( 1 );
     my $smokelog = '';
-    local *LOGFH;
-    if ( open LOGFH, "< $logfile" ) {
-        $verbose and print "Reading logfile '$logfile'\n";
-        local $/;
-        $smokelog = <LOGFH>;
-        close LOGFH;
+    my $log = read_logfile(undef,$logfile);
+    if ($log) {
+	$smokelog = $log;
+        $verbose and print "Read logfile '$logfile'\n";
         $verbose and print "Pattern($cc): /$pat/\n";
     } else {
         $verbose and print "Skipping '$logfile' '$!'\n";
@@ -497,7 +519,7 @@ sub grepccmsg {
     return wantarray ? @errors : \@errors;
 }
 
-=item get_local_patches( $ddir )
+=head2 get_local_patches( $ddir )
 
 C<get_local_patches()> reads F<patchlevel.h> to scan for the locally
 applied patches array.
@@ -534,7 +556,7 @@ sub get_local_patches {
     return @lpatches;
 }
 
-=item set_local_patch( $ddir, @descr )
+=head2 set_local_patch( $ddir, @descr )
 
 Copy the code from F<patchlevel.h>. Older (pre 5.8.1) perls do not
 have it and it doesn't work on MSWin32.
@@ -585,7 +607,7 @@ sub set_local_patch {
     return 1;
 }
 
-=item get_config( $filename )
+=head2 get_config( $filename )
 
 Read and parse the configuration from file, or return the default
 config.
@@ -676,7 +698,7 @@ sub get_config {
     return @cnf_stack;
 }
 
-=item get_patch( [$ddir] )
+=head2 get_patch( [$ddir] )
 
 Try to find the patchlevel, look for B<.patch> or try to get it from
 B<patchlevel.h> as a fallback.
@@ -695,17 +717,11 @@ sub get_patch {
         close DOTPATCH;
 
         if ( $patch_level ) {
-            my @dot_patch = split ' ', $patch_level;
-            my @return = ( $dot_patch[2] || $dot_patch[0] );
-            if ( $dot_patch[3] ) {
-                ( my $short_describe = $dot_patch[3] ) =~ s/^GitLive-//;
-                push @return, $short_describe;
-            }
-            return \@return;
+            my ($branch, $date, $sha, $describe) = split(' ', $patch_level);
+            ( my $short_describe = $describe ) =~ s/^GitLive-//;
+            return [$sha, $short_describe, $branch]
         }
-        else {
-            return [ '' ];
-        }
+        return [ '' ];
     }
 
     # There does not seem to be a '.patch', try 'patchlevel.h'
@@ -730,7 +746,7 @@ sub get_patch {
     return [ $patch_level ];
 }
 
-=item version_from_patchlevel_h( $ddir )
+=head2 version_from_patchlevel_h( $ddir )
 
 C<version_from_patchlevel_h()> returns a "dotted" version as derived 
 from the F<patchlevel.h> file in the distribution.
@@ -766,7 +782,7 @@ sub version_from_patchlevel_h {
     return "$revision.$version.$subversion";
 }
  
-=item get_ncpu( $osname )
+=head2 get_ncpu( $osname )
 
 C<get_ncpu()> returns the number of available (online/active/enabled) CPUs.
 
@@ -780,6 +796,8 @@ is returned.
 In the first case (where we really have no idea how to proceed),
 also a warning (C<get_ncpu: unknown operating system>) is sent to STDERR.
 
+=over
+
 =item B<WARNINGS>
 
 If you get the warning C<get_ncpu: unknown operating system>, you will
@@ -789,6 +807,8 @@ please try to find the fastest one, and a one that does not require
 superuser (administrator) rights.
 
 Thanks to Jarkko Hietaniemi for donating this!
+
+=back
 
 =cut
 
@@ -860,7 +880,7 @@ sub get_ncpu {
     return $cpus ? sprintf( "%s cpu%s", $cpus, $cpus ne "1" ? 's' : '' ) : "";
 }
 
-=item get_smoked_Config( $dir, @keys )
+=head2 get_smoked_Config( $dir, @keys )
 
 C<get_smoked_Config()> returns a hash (a listified hash) with the
 specified keys. It will try to find F<lib/Config.pm> to get those
@@ -941,11 +961,11 @@ sub get_smoked_Config {
     return %Config;
 }
 
-=item parse_report_Config( $report )
+=head2 parse_report_Config( $report )
 
 C<parse_report_Config()> returns a list attributes from a smoke report.
 
-    my( $version, $plevel, $os, $osvers, $archname, $summary ) = 
+    my( $version, $plevel, $os, $osvers, $archname, $summary, $branch ) = 
         parse_report_Config( $rpt );
 
 =cut
@@ -953,7 +973,8 @@ C<parse_report_Config()> returns a list attributes from a smoke report.
 sub parse_report_Config {
     my( $report ) = @_;
 
-    my $version  = $report =~ /^Automated.*for (.+) patch/ ? $1 : '';
+    my $branch   = $report =~ /^Automated.+branch (.+?) / ? $1 : 'blead';
+    my $version  = $report =~ /^Automated.*for(?: branch \S+)? (.+) patch/ ? $1 : '';
     my $plevel   = $report =~ /^Automated.+?(\S+)$/m
         ? $1 : '';
     if ( !$plevel ) {
@@ -965,10 +986,10 @@ sub parse_report_Config {
     my $archname = $report =~ /:.* \((.*)\)/ ? $1 : '';
     my $summary  = $report =~ /^Summary: (.*)/m ? $1 : '';
 
-    return ( $version, $plevel, $osname, $osvers, $archname, $summary );
+    return ( $version, $plevel, $osname, $osvers, $archname, $summary, $branch );
 }
 
-=item get_regen_headers( $ddir )
+=head2 get_regen_headers( $ddir )
 
 C<get_regen_headers()> looks in C<$ddir> to find either 
 F<regen_headers.pl> or F<regen.pl> (change 18851).
@@ -992,7 +1013,7 @@ sub get_regen_headers {
     return; # Should this be "make regen_headers"?
 }
 
-=item run_regen_headers( $ddir, $verbose );
+=head2 run_regen_headers( $ddir, $verbose );
 
 C<run_regen_headers()> gets its executable from C<get_regen_headers()>
 and opens a pipe from it. warn()s on error.
@@ -1024,7 +1045,7 @@ sub run_regen_headers {
     return 1;
 }
 
-=item whereis( $prog )
+=head2 whereis( $prog )
 
 Try to find an executable instance of C<$prog> in $ENV{PATH}.
 
@@ -1053,7 +1074,7 @@ sub whereis {
     return '';
 }
 
-=item vms_whereis( $prog )
+=head2 vms_whereis( $prog )
 
 First look in the SYMBOLS to see if C<$prog> is there.
 Next look in the KFE-table C<INSTALL LIST> if it is there.
@@ -1098,7 +1119,7 @@ sub vms_whereis {
     return '';
 }
 
-=item clean_filename( $fname )
+=head2 clean_filename( $fname )
 
 C<clean_filename()> basically returns a vmsify() type of filename for
 VMS, and returns an upcase filename for case-ignorant filesystems.
@@ -1118,7 +1139,7 @@ sub clean_filename {
     return $NOCASE ? uc $fname : $fname;
 }
 
-=item calc_timeout( $killtime[, $from] )
+=head2 calc_timeout( $killtime[, $from] )
 
 C<calc_timeout()> calculates the timeout in seconds. 
 C<$killtime> can be one of two formats:
@@ -1159,7 +1180,7 @@ sub calc_timeout {
     return $timeout;
 }
 
-=item time_in_hhmm( $diff )
+=head2 time_in_hhmm( $diff )
 
 Create a string telling elapsed time in days, hours, minutes, seconds
 from the number of seconds.
@@ -1188,7 +1209,7 @@ sub time_in_hhmm {
     return join " ", @parts;
 }
 
-=item do_pod2man( %pod2usage_options )
+=head2 do_pod2man( %pod2usage_options )
 
 If L<Pod::Usage> is there then call its C<pod2usage()>.
 In the other case, print the general message passed with the C<myusage> key.
@@ -1216,7 +1237,7 @@ EO_MSG
     }
 }
 
-=item skip_config( $config ) 
+=head2 skip_config( $config ) 
 
 Returns true if this config should be skipped.
 C<$config> should be a B<Test::Smoke::BuildCFG::Config> object.
@@ -1237,7 +1258,7 @@ sub skip_config {
     return $skip;
 }
 
-=item skip_filter( $line )
+=head2 skip_filter( $line )
 
 C<skip_filter()> returns true if the filter rules apply to C<$line>.
 
@@ -1303,8 +1324,6 @@ sub skip_filter {
 }
 
 1;
-
-=back
 
 =head1 COPYRIGHT
 

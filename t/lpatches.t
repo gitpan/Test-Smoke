@@ -1,7 +1,7 @@
 #! perl -w
 use strict;
 
-# $Id: lpatches.t 917 2005-11-14 22:00:39Z abeltje $
+# $Id$
 
 use File::Spec::Functions;
 my $findbin;

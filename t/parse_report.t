@@ -1,7 +1,7 @@
 #! /usr/bin/perl -w
 use strict;
 
-# $Id: parse_report.t 567 2004-01-13 23:55:22Z abeltje $
+# $Id$
 
 use Test::More;
 

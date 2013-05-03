@@ -1,7 +1,7 @@
 #! perl -w
 use strict;
 
-# $Id: get_cpus.t 235 2003-07-15 14:24:23Z abeltje $
+# $Id$
 
 use Config;
 

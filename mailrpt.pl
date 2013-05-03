@@ -2,7 +2,7 @@
 use strict;
 $| = 1;
 
-# $Id: mailrpt.pl 1302 2012-03-16 13:16:16Z abeltje $
+# $Id$
 use vars qw( $VERSION );
 $VERSION = '0.017';
 
@@ -29,8 +29,8 @@ my %opt = (
     ccp5p_onfail => undef,
     from         => undef,
     mserver      => undef,
-    muser        => undef,
-    mpass        => undef,
+    msuser       => undef,
+    mspass       => undef,
     v            => undef,
 
     rptfile      => 'mktest.rpt',

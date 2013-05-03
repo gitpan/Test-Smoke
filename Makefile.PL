@@ -1,5 +1,5 @@
 #! /usr/bin/perl -w
-# $Id: Makefile.PL 1369 2012-06-11 20:52:54Z abeltje $
+# $Id$
 use strict;
 use 5.006;
 use ExtUtils::MakeMaker;

@@ -1,7 +1,7 @@
 #! /usr/bin/perl -w
 use strict;
 
-# $Id: smoked_config.t 845 2005-04-24 16:29:11Z abeltje $
+# $Id$
 
 use File::Spec;
 my $findbin;

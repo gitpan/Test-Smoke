@@ -1,7 +1,7 @@
 #! /usr/bin/perl -w
 use strict;
 
-# $Id: sysinfo.t 1114 2007-09-25 13:02:17Z abeltje $
+# $Id$
 
 use Test::More tests => 55;
 my $verbose = 0;

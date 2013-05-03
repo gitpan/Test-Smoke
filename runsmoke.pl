@@ -2,7 +2,7 @@
 use strict;
 $| = 1;
 
-# $Id: runsmoke.pl 809 2004-12-03 11:14:47Z abeltje $
+# $Id$
 use vars qw( $VERSION );
 $VERSION = '0.002';
 

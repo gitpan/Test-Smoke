@@ -1,7 +1,7 @@
 #! /usr/bin/perl -w
 use strict;
 
-# $Id: syncer_rsync.t 1306 2012-03-17 17:29:13Z abeltje $
+# $Id$
 
 use Data::Dumper;
 use Cwd qw/cwd abs_path/;
@@ -12,7 +12,7 @@ use_ok( 'Test::Smoke::Syncer' );
 
 my %df_rsync = (
     rsync => 'rsync',
-    source => 'public.activestate.com::perl-current',
+    source => 'perl5.git.perl.org::perl-current',
     opts   => '-az --delete',
     ddir   => File::Spec->canonpath(
         File::Spec->rel2abs('perl-current', abs_path(cwd()))

@@ -2,7 +2,7 @@
 use strict;
 $| = 1;
 
-# $Id: patchtree.pl 902 2005-09-08 23:10:28Z abeltje $
+# $Id$
 use vars qw( $VERSION );
 $VERSION = '0.008';
 

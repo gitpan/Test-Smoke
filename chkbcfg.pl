@@ -1,7 +1,7 @@
 #! /usr/bin/perl -w
 use strict;
 
-# $Id: chkbcfg.pl 844 2005-04-22 20:21:36Z abeltje $
+# $Id$
 use vars qw ( $VERSION );
 $VERSION = '0.002';
 

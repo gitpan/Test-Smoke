@@ -2,7 +2,7 @@
 use strict;
 use Data::Dumper;
 
-# $Id: skip_config.t 823 2005-02-11 09:59:20Z abeltje $
+# $Id$
 
 use Test::More;
 my @tests;

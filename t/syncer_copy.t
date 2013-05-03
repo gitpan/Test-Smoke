@@ -2,7 +2,7 @@
 use strict;
 use Data::Dumper;
 
-# $Id: syncer_copy.t 766 2004-10-17 18:28:22Z abeltje $
+# $Id$
 
 my $findbin;
 use File::Basename;

@@ -1,7 +1,7 @@
 # This is a test makefile.mk for Configure_win32()
 # I need this to test all possible configuration stuff.
 #
-# $Id: makefile.mk 601 2004-02-12 07:21:22Z abeltje $
+# $Id$
 #
 # These are not touched by default (Must be checked either way)
 INST_DRV	*= C:

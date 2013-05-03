@@ -1,7 +1,7 @@
 #! perl -w
 use strict;
 
-# $Id: regenstuff.t 763 2004-10-17 16:28:54Z abeltje $
+# $Id$
 
 my $findbin;
 use File::Basename;

@@ -1,7 +1,7 @@
 #! /usr/bin/perl -w
 use strict;
 
-# $Id: syncer_snap.t 235 2003-07-15 14:24:23Z abeltje $
+# $Id$
 
 use Data::Dumper;
 use Test::More tests => 3;

@@ -2,7 +2,7 @@
 use strict;
 $| = 1;
 
-# $Id: policy.t 763 2004-10-17 16:28:54Z abeltje $
+# $Id$
 # This file checks to see if the new Test::Smoke::Policy object
 # does the same as the old way Merijn originaly wrote
 

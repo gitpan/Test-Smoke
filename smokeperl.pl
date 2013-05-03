@@ -5,7 +5,7 @@ eval 'exec /usr/bin/perl -w -S $0 ${1+"$@"}'
 use strict;
 $|=1;
 
-# $Id: smokeperl.pl 1363 2012-05-10 21:21:26Z abeltje $
+# $Id$
 use vars qw( $VERSION );
 $VERSION = Test::Smoke->VERSION;
 
@@ -361,7 +361,7 @@ L<README>, L<FAQ>, L<configsmoke.pl>, L<mktest.pl>, L<mkovz.pl>
 
 =head1 REVISION
 
-$Id: smokeperl.pl 1363 2012-05-10 21:21:26Z abeltje $
+$Id$
 
 =head1 COPYRIGHT
 

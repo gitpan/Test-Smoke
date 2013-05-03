@@ -2,7 +2,7 @@
 use strict;
 $| = 1;
 
-# $Id: synctree.pl 919 2005-12-18 10:06:39Z abeltje $
+# $Id$
 use vars qw( $VERSION );
 $VERSION = '0.011';
 
@@ -27,7 +27,7 @@ my %opt = (
 
 my $defaults = Test::Smoke::Syncer->config( 'all_defaults' );
 
-my %valid_type = map { $_ => 1 } qw( rsync snapshot copy hardlink forest ftp );
+my %valid_type = map { $_ => 1 } qw( rsync git snapshot copy hardlink forest ftp );
 
 =head1 NAME
 

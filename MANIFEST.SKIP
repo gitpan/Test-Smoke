@@ -6,9 +6,15 @@ private/
 klad/
 contrib/
 mkdist.sh
+release.sh
 provesmoke
 resmoke.pl
 roadmap.pod
 sprove.pl
 tags
 TAGS
+blib/
+.git
+pm_to_blib
+Makefile
+MYMETA\..+

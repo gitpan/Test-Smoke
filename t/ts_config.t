@@ -1,7 +1,7 @@
 #! /usr/perl/perl -w
 use strict;
 
-# $Id: ts_config.t 727 2004-09-05 12:08:47Z abeltje $
+# $Id$
 
 use FindBin;
 use Data::Dumper;

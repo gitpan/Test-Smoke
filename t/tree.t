@@ -1,7 +1,7 @@
 #! /usr/bin/perl -w
 use strict;
 
-# $Id: tree.t 822 2005-02-11 09:54:10Z abeltje $
+# $Id$
 
 use Data::Dumper;
 use File::Spec::Functions qw( :DEFAULT abs2rel rel2abs splitpath splitdir );

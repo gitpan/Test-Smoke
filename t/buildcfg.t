@@ -1,7 +1,7 @@
 #! /usr/bin/perl -w
 use strict;
 
-# $Id: buildcfg.t 763 2004-10-17 16:28:54Z abeltje $
+# $Id$
 
 use Test::More tests => 81;
 my $verbose = 0;
