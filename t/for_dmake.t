@@ -1,14 +1,12 @@
 #! perl -w
 use strict;
 
-# $Id$
-
 use File::Spec;
 
-use Test::More tests => 95;
+use Test::More tests => 101;
 BEGIN { use_ok( 'Test::Smoke::Util' ); }
-END { 
-#    1 while unlink 'win32/smoke.mk'; 
+END {
+#    1 while unlink 'win32/smoke.mk';
     chdir File::Spec->updir
         if -d File::Spec->catdir( File::Spec->updir, 't' );
 }
@@ -25,26 +23,19 @@ Configure_win32( './Configure ' . $config, 'dmake' );
 
 ok( -f $smoke_mk, "New makefile ($config)" );
 
-my $extra_len = length( "\t\tconfig_args=$dft_args\t~\t\\\n" );
-# To help the Win9[58] build, we must "genmk95.pl smoke.mk makefile.95"
-# We know about 2 times: s/\bmakefile.mk\b/smoke.mk/ (in testfile!)
-$extra_len -= 2 * (length( 'makefile.mk') - length( 'smoke.mk' ));
-is( -s 'win32/makefile.mk', ( -s $smoke_mk ) - $extra_len,
-    "Sizes are equal for standard options (-Duseithreads)" );
-
 SKIP: {
     local *MKFILE;
     open MKFILE, '< win32/makefile.mk' or skip "Can't read makefile.mk", 1;
     my $donot_change = 0;
-    my @orig = map { 
+    my @orig = map {
         $donot_change ||= /^#+ CHANGE THESE ONLY IF YOU MUST #+$/;
-        $donot_change and s/\bmakefile.mk\b/smoke.mk/; 
+        $donot_change and s/\bmakefile.mk\b/smoke.mk/;
         $_
     } <MKFILE>;
     close MKFILE;
     open MKFILE, "< $smoke_mk" or skip "Can't read smoke.mk", 1;
     my @dest = grep ! /^\s+config_args=-Duseithreads/ => <MKFILE>;
-    
+
     close MKFILE;
 
     is_deeply( \@dest, \@orig, "Content compares" );
@@ -72,9 +63,9 @@ SKIP: {
     #These should be unset (no: -Duseithreads -Duselargefiles)
     like( $makefile, '/^#USE_MULTI\s*\*= define\n/m', '#$(USE_MULTI)' );
     like( $makefile, '/^#USE_ITHREADS\s*\*= define\n/m', '#$(USE_ITHREADS)' );
-    like( $makefile, '/^#USE_IMP_SYS\s*\*= define\n/m', 
+    like( $makefile, '/^#USE_IMP_SYS\s*\*= define\n/m',
           '#$(USE_IMP_SYS)' );
-    like( $makefile, '/^#USE_LARGE_FILES\s*\*= define\n/m', 
+    like( $makefile, '/^#USE_LARGE_FILES\s*\*= define\n/m',
           '#$(USE_LARGE_FILES)' );
     like( $makefile, '/^#IS_WIN95\s*\*= define\n/m', '#$(IS_WIN95)' );
 }
@@ -95,9 +86,9 @@ SKIP: {
 
     # This should be set
     like( $makefile, '/^INST_DRV\s*\*=\s*C:\n/m' , '$(INST_DRV)' );
-    like( $makefile, '/^INST_DRV\t\*?= untuched\n/m', 
+    like( $makefile, '/^INST_DRV\t\*?= untuched\n/m',
           "\$(INST_DRV) Untuched 1" );
-    like( $makefile, '/^INST_VER\s*\*?=\s*\\\\5\.9\.0\n/m', 
+    like( $makefile, '/^INST_VER\s*\*?=\s*\\\\5\.9\.0\n/m',
           "\$(INST_VER)" );
     like( $makefile, '/^#INST_ARCH\s*\*=/m', "#\$(INST_ARCH)" );
 
@@ -150,7 +141,7 @@ SKIP: {
 
     #These should be set
     like( $makefile, '/^USE_MULTI\s*\*= define\n/m', '$(USE_MULTI) set' );
-    like( $makefile, '/^USE_ITHREADS\s*\*= define\n/m', 
+    like( $makefile, '/^USE_ITHREADS\s*\*= define\n/m',
           '$(USE_ITHREADS) set' );
     like( $makefile, '/^USE_IMP_SYS\s*\*= define\n/m', '$(USE_IMP_SYS) set' );
 }
@@ -358,10 +349,14 @@ SKIP: {
     my $makefile = do { local $/; <MF> };
     close MF;
 
-    like( $makefile, '/^BUILDOPT\t\+=\s-DPERL_COPY_ON_WRITE\n
-                        BUILDOPT\t\+=\s-DPERL_POLLUTE\n
-                        #+\ CHANGE THESE ONLY IF YOU MUST\ #+
-    /mx', "-Accflags= is translated to BUILDOPT +=" );
+    like(
+        $makefile,
+        '/^BUILDOPT\t\+=\s-DPERL_COPY_ON_WRITE\n
+           BUILDOPT\t\+=\s-DPERL_POLLUTE\n
+           #+\ CHANGE THESE ONLY IF YOU MUST\ #+
+        /mx',
+        "-Accflags= is translated to BUILDOPT +="
+    );
 }
 
 ok( my_unlink( $smoke_mk ), "Remove makefile" );
@@ -393,12 +388,29 @@ SKIP: {
     my $makefile = do { local $/; <MF> };
     close MF;
 
-    like( $makefile, '/^USE_MULTI\s*\*= define\n/m', '$(USE_MULTI)' );
-    like( $makefile, '/^USE_ITHREADS\s*\*= define\n/m', '$(USE_ITHREADS)' );
-    like( $makefile, '/^#USE_IMP_SYS\s*\*= define\n/m', 
-          '#$(USE_IMP_SYS)' );
-    like( $makefile, '/^USE_LARGE_FILES\s*\*= define\n/m', 
-          '$(USE_LARGE_FILES)' );
+    like($makefile, '/^USE_MULTI\s*\*= define\n/m',       '$(USE_MULTI)');
+    like($makefile, '/^USE_ITHREADS\s*\*= define\n/m',    '$(USE_ITHREADS)');
+    like($makefile, '/^#USE_IMP_SYS\s*\*= define\n/m',    '#$(USE_IMP_SYS)');
+    like($makefile, '/^USE_LARGE_FILES\s*\*= define\n/m', '$(USE_LARGE_FILES)');
+}
+
+ok( my_unlink( $smoke_mk ), "Remove makefile" );
+
+note("Testing -Duseithreads -UWIN64...");
+$config = $dft_args . " -UWIN64";
+Configure_win32( './Configure ' . $config, 'dmake' );
+ok( -f $smoke_mk, "New makefile ($config)" );
+SKIP: {
+    local *MF;
+    ok open(MF, "< $smoke_mk"), "Opening makefile" or
+        skip "Cannot read from '$smoke_mk': $!", 1;
+    my $makefile = do { local $/; <MF> };
+    close MF;
+
+    like($makefile, '/^USE_MULTI\s*\*= define\n/m',       '$(USE_MULTI)');
+    like($makefile, '/^USE_ITHREADS\s*\*= define\n/m',    '$(USE_ITHREADS)');
+    like($makefile, '/^USE_LARGE_FILES\s*\*= define\n/m', '$(USE_LARGE_FILES)');
+    like($makefile, '/^WIN64\s*\*= undef\n/m',            '$(WIN64)');
 }
 
 ok( my_unlink( $smoke_mk ), "Remove makefile" );

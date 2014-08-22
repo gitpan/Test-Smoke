@@ -1,12 +1,12 @@
 {
    "abstract" : "The Perl core test smoke suite",
    "author" : [
-      "H.Merijn Brand <h.m.brand@hccnet.nl>, Nicholas Clark <nick@plum.flirble.org> and Abe Timmerman <abeltje@cpan.org>"
+      "H.Merijn Brand <h.m.brand@xs4all.nl>, Nicholas Clark <nick@plum.flirble.org> and Abe Timmerman <abeltje@cpan.org>"
    ],
    "dynamic_config" : 1,
-   "generated_by" : "ExtUtils::MakeMaker version 6.62, CPAN::Meta::Converter version 2.112150",
+   "generated_by" : "ExtUtils::MakeMaker version 6.6302, CPAN::Meta::Converter version 2.132830",
    "license" : [
-      "unknown"
+      "perl_5"
    ],
    "meta-spec" : {
       "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
@@ -22,23 +22,22 @@
    "prereqs" : {
       "build" : {
          "requires" : {
-            "ExtUtils::MakeMaker" : 0
+            "ExtUtils::MakeMaker" : "0"
          }
       },
       "configure" : {
          "requires" : {
-            "ExtUtils::MakeMaker" : 0
+            "ExtUtils::MakeMaker" : "0"
          }
       },
       "runtime" : {
          "requires" : {
             "File::Spec" : "0.82",
-            "JSON" : 0,
-            "LWP::UserAgent" : 0,
-            "Test::More" : 0
+            "Test::More" : "0",
+            "Test::NoWarnings" : "0"
          }
       }
    },
-   "release_status" : "stable",
-   "version" : "1.6"
+   "release_status" : "testing",
+   "version" : "1.61_03"
 }

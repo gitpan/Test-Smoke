@@ -2,8 +2,6 @@
 use strict;
 $| = 1;
 
-# $Id$
-
 my $findbin;
 use File::Basename;
 BEGIN { $findbin = dirname $0; }
@@ -26,6 +24,12 @@ BEGIN {
           wcnt =>  2, ecnt => 0, lcnt => 2 },
         { file => 'mingw.log',    type => 'gcc',
           wcnt =>  1, ecnt => 0, lcnt => 32 }, 
+        { file => 'icc102.log',   type => 'icc',
+          wcnt =>  5, ecnt => 2, lcnt => 7 },
+        { file => 'icc102.log',   type => 'icpc',
+          wcnt =>  5, ecnt => 2, lcnt => 7 },
+        { file => 'linux3710g.log', type => 'gcc',
+          wcnt =>  1, ecnt => 1, lcnt => 1 },
     );
 
     plan tests => 1 + 5 * @logs + 1;
@@ -39,7 +43,15 @@ for my $log ( @logs ) {
     my $file = catfile "t", "logs", $log->{file};
     ok -f $file, "logfile($file) exists";
 
-    my @errors = grepccmsg( $log->{type}, $file, $verbose );
+    my $logs;
+    if (open my $fh, '<', $file) {
+        $logs = do { local $/; <$fh> };
+        close $fh;
+    }
+    else {
+        diag("Problem reading '$file': $!");
+    }
+    my @errors = grepccmsg( $log->{type}, $logs, $verbose );
 
     ok @errors, "Found messages in '$log->{file}'";
     is scalar @errors, $log->{lcnt},
@@ -56,10 +68,18 @@ for my $log ( @logs ) {
 }
 
 {
-    my $log = catfile 't', 'logs', 'gcc2722.log';
-    my @errors = grepccmsg( 'gcc', $log, $verbose );
+    my $file = catfile 't', 'logs', 'gcc2722.log';
+    my $logs;
+    if (open my $fh, '<', $file) {
+        $logs = do { local $/; <$fh> };
+        close $fh;
+    }
+    else {
+        diag("Problem reading '$file': $!");
+    }
+    my @errors = grepccmsg( 'gcc', $logs, $verbose );
     my $report = join "\n", @errors;
 
-    ( my $orig = get_file( $log ) ) =~ s/\n$//;
+    ( my $orig = get_file( $file ) ) =~ s/\n$//;
     is $report, $orig, "Got all the gcc-2.7.2.2 messages";
 }

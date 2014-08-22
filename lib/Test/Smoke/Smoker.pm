@@ -1,15 +1,14 @@
 package Test::Smoke::Smoker;
+use warnings;
 use strict;
 
-# $Id$
-use vars qw( $VERSION );
-$VERSION = '0.045';
+our $VERSION = '0.046';
 
+use Config;
 use Cwd;
 use File::Spec::Functions qw( :DEFAULT abs2rel rel2abs );
-use Config;
 use Test::Smoke::Util qw( get_smoked_Config skip_filter );
-require Carp;
+
 BEGIN { eval q{ use Time::HiRes qw( time ) } }
 
 my %CONFIG = (
@@ -93,11 +92,31 @@ Test::Smoke::Smoker - OO interface to do one smoke cycle.
 
 The Test::Smoke::Smoker module, an OO interface to do one smoke cycle.
 
+=head1 CONSTANTS
+
+=over
+
+=item BUILD_MINIPERL
+
+=item BUILD_NOTHING
+
+=item BUILD_PERL
+
+=item HARNESS3_RE_EXTRA
+
+=item HARNESS3_RE_FAILED
+
+=item HARNESS3_RE_TODO
+
+=item HARNESS_RE1
+
+=item HARNESS_RE2
+
+=back
+
 =head1 METHODS
 
-=over 4
-
-=item Test::Smoke::Smoker->new( \*GLOB, %args )
+=head2 Test::Smoke::Smoker->new( \*GLOB, %args )
 
 C<new()> takes a mandatory (opened) filehandle and some other options:
 
@@ -122,7 +141,8 @@ sub new {
     my $fh = shift;
 
     unless ( ref $fh eq 'GLOB' ) {
-        Carp::croak( sprintf "Usage: %s->new( \\*FH, %%args )", __PACKAGE__);
+        require Carp;
+        Carp::croak(sprintf "Usage: %s->new( \\*FH, %%args )", __PACKAGE__);
     }
 
     my %args_raw = @_ ? UNIVERSAL::isa( $_[0], 'HASH' ) ? %{ $_[0] } : @_ : ();
@@ -152,17 +172,29 @@ sub new {
     return $self;
 }
 
+=head2 $smoker->mark_in()
+
+Write the current timestamp with 'Start' marker to the logfile.
+
+=cut
+
 sub mark_in {
     my $self = shift;
     $self->log( sprintf "Started smoke at %d\n", time() );
 }
+
+=head2 $smoker->mark_out()
+
+Write the current timestamp with 'Stopped' marker to the logfile.
+
+=cut
 
 sub mark_out {
     my $self = shift;
     $self->log( sprintf "Stopped smoke at %d\n", time() );
 }
 
-=item Test::Smoke::Smoker->config( $key[, $value] )
+=head2 Test::Smoke::Smoker->config( $key[, $value] )
 
 C<config()> is an interface to the package lexical C<%CONFIG>,
 which holds all the default values for the C<new()> arguments.
@@ -192,7 +224,7 @@ sub config {
     return $CONFIG{ "df_$key" };
 }
 
-=item $smoker->tty( $message )
+=head2 $smoker->tty( $message )
 
 Prints a message to the default filehandle.
 
@@ -204,7 +236,7 @@ sub tty {
     print $message;
 }
 
-=item $smoker->log( $message )
+=head2 $smoker->log( $message )
 
 Prints a message to the logfile, filehandle.
 
@@ -216,7 +248,7 @@ sub log {
     print { $self->{logfh} } $message;
 }
 
-=item $smoker->ttylog( $message )
+=head2 $smoker->ttylog( $message )
 
 Prints a message to both the default and the logfile filehandles.
 
@@ -228,7 +260,7 @@ sub ttylog {
     $self->tty( @_ );
 }
 
-=item $smoker->smoke( $config[, $policy] )
+=head2 $smoker->smoke( $config[, $policy] )
 
 C<smoke()> takes a B<Test::Smoke::BuildCFG::Config> object and runs all
 the basic steps as (private) object methods.
@@ -293,7 +325,7 @@ sub smoke {
     return 1;
 }
 
-=item $smoker->make_distclean( )
+=head2 $smoker->make_distclean( )
 
 C<make_distclean()> runs C<< make -i distclean 2>/dev/null >>
 
@@ -318,7 +350,7 @@ sub make_distclean {
     }
 }
 
-=item $smoker->extra_manicheck( )
+=head2 $smoker->extra_manicheck( )
 
 C<extra_manicheck()> will only work for C<< $self->{v} > 1 >> and does
 an extra integrity check comparing F<MANIFEST> and the
@@ -343,7 +375,7 @@ sub extra_manicheck {
     }
 }
 
-=item $smoker->handle_policy( $policy, @substs );
+=head2 $smoker->handle_policy( $policy, @substs );
 
 C<handle_policy()> will try to apply the substition rules and then
 write the file F<Policy.sh>.
@@ -364,7 +396,7 @@ sub handle_policy {
     $policy->write;
 }
 
-=item $smoker->Configure( $config )
+=head2 $smoker->Configure( $config )
 
 C<Configure()> sorts out the MSWin32 mess and calls F<./Configure>
 
@@ -398,7 +430,7 @@ sub Configure {
     return -f $makefile;
 }
 
-=item $smoker->make_( )
+=head2 $smoker->make_( )
 
 C<make_()> will run make.
 
@@ -448,7 +480,7 @@ sub make_ {
         : BUILD_MINIPERL;
 }
 
-=item make_test_prep( )
+=head2 make_test_prep( )
 
 Run C<< I<make test-perp> >> and check if F<t/perl> exists.
 
@@ -466,7 +498,7 @@ sub make_test_prep {
     return $self->{is_win32} ? -f $perl : -l $perl;
 }
 
-=item $smoker->make_test( )
+=head2 $smoker->make_test( )
 
 =cut
 
@@ -514,9 +546,9 @@ sub make_test {
         unless ( $self->{run} ) {
             $self->ttylog( "bailing out (--norun)...\n" );
             next;
-	}
+        }
 
-	if  ( $self->{harnessonly} ) {
+        if  ( $self->{harnessonly} ) {
 
             $self->{harness3opts} and
                 local $ENV{HARNESS_OPTIONS} = $self->{harness3opts};
@@ -546,7 +578,7 @@ sub make_test {
     return 1;
 }
 
-=item $self->extend_with_harness( @nok )
+=head2 $self->extend_with_harness( @nok )
 
 =cut
 
@@ -603,7 +635,7 @@ sub extend_with_harness {
     }
 }
 
-=item $moker->make_test_harness
+=head2 $moker->make_test_harness
 
 Use Test::Harness (the test_harness target) to get the failing test
 information and do not bother with TEST.
@@ -633,7 +665,7 @@ sub make_test_harness {
     }
 }
 
-=item $smoker->_run_harness_target( $target, $extra )
+=head2 $smoker->_run_harness_target( $target, $extra )
 
 The command to run C<make test_harness> differs based on platform, so
 the arguments have to be passed into general routine. C<$target>
@@ -683,14 +715,15 @@ sub _run_harness_target {
 
     close $tst or do {
         my $error = $! || ( $? >> 8);
-        Carp::carp( "\nerror while running harness target '$target': $error" );
+        require Carp;
+        Carp::carp("\nerror while running harness target '$target': $error");
     };
 
     $self->ttylog( "\n", join( "", @failed ), "\n" );
     $self->tty( "Archived results...\n" );
 }
 
-=item $smoker->_run_harness3_target( $target, $extra )
+=head2 $smoker->_run_harness3_target( $target, $extra )
 
 The command to run C<make test_harness> differs based on platform, so
 the arguments have to be passed into general routine. C<$target>
@@ -784,7 +817,8 @@ sub _run_harness3_target {
 
     close $tst or do {
         my $error = $! || ( $? >> 8);
-        Carp::carp( "\nerror while running harness target '$target': $error" );
+        require Carp;
+        Carp::carp("\nerror while running harness target '$target': $error" );
     };
 
     $self->ttylog( "\n", join( "", @failed ), "\n" );
@@ -793,7 +827,10 @@ sub _run_harness3_target {
 
 sub _run_TEST_target {
     my( $self, $target, $extend ) = @_;
-    !$target and Carp::Confess( "No target in _run_TEST_target" );
+    !$target and do {
+        require Carp;
+        Carp::confess("No target in _run_TEST_target");
+    };
 
     my @nok;
     my $tst = $self->_make_fork( $target );
@@ -817,7 +854,7 @@ sub _run_TEST_target {
     }
     close $tst or do {
         my $error = $! || ( $? >> 8);
-        Carp::carp("\nError while reading test-results: $error");
+        $self->tty("\nError while reading test-results: $error");
     };
 
 #    $self->log( map { "    $_" } @nok );
@@ -833,7 +870,7 @@ sub _run_TEST_target {
     }
 }
 
-=item $self->make_minitest
+=head2 $self->make_minitest
 
 C<make> was unable to build a I<perl> executable, but managed to build
 I<miniperl>, so we do C<< S<make minitest> >>.
@@ -855,7 +892,7 @@ sub make_minitest {
     return 1;
 }
 
-=item $self->_parse_harness_output( $\%notok, $all_ok, @lines )
+=head2 $self->_parse_harness_output( $\%notok, $all_ok, @lines )
 
 Factor out the parsing of the Test::Harness output, as it seems subject
 to change.
@@ -891,7 +928,7 @@ sub _parse_harness_output {
     return $output;
 }
 
-=item $self->_parse_harness3_output( $\%notok, $all_ok, @lines )
+=head2 $self->_parse_harness3_output( $\%notok, $all_ok, @lines )
 
 Fator out the parsing of the Test::Harness 3 output, as it seems subject
 to change.
@@ -965,7 +1002,7 @@ sub _parse_harness3_output {
     return $output;
 }
 
-=item $self->_trasnaform_testnames( @notok )
+=head2 $self->_trasnaform_testnames( @notok )
 
 C<_transform_testnames()> takes a list of testnames, as found by
 C<TEST> (testname without C<.t> suffix followed by dots and a reason)
@@ -988,7 +1025,7 @@ sub _transform_testnames {
     return %inconsistent;
 }
 
-=item $smoker->_normalize_testname( $test )
+=head2 $smoker->_normalize_testname( $test )
 
 Normalize a testname...
 
@@ -1017,13 +1054,13 @@ sub _normalize_testname {
     return $test_path;
 }
 
-=item set_skip_tests( [$unset] )
+=head2 set_skip_tests( [$unset] )
 
 Read from a MANIFEST like file, set in C<< $self->{skip_tests} >>, and
 rename the files in it with the extension F<.tskip>. If C<$unset> is
 set, they will be renamed back.
 
-=item unset_skip_tests
+=head2 unset_skip_tests
 
 Calls C<< $self->set_skip_tests( 1 ) >>.
 
@@ -1068,13 +1105,13 @@ sub set_skip_tests {
         @libext and $self->change_manifest( \@libext, $unset );
     } else {
         require Carp;
-        Carp::carp( "Cannot open($self->{skip_tests}): $!" );
+        Carp::carp("Cannot open($self->{skip_tests}): $!");
     }
 }
 
 sub unset_skip_tests { $_[0]->set_skip_tests( 1 ) }
 
-=item $self->change_manifest( \@tests, $unset )
+=head2 $self->change_manifest( \@tests, $unset )
 
 =cut
 
@@ -1090,14 +1127,14 @@ sub change_manifest {
             unlink $mani_org;
             rename $mani_new, $mani_org;
             chmod $perms, $mani_org;
-	}
+        }
     } else {
         my $perms = (stat $mani_org)[2] & 07777;
         chmod 0755, $mani_org;
         rename $mani_org, $mani_new or do {
             chmod $perms, $mani_org;
             require Carp;
-	    Carp::carp("No skip of lib or ext tests [rename($mani_new): $!]");
+            Carp::carp("No skip of lib or ext tests [rename($mani_new): $!]");
             return;
         };
         local( *MANIO, *MANIN );
@@ -1121,7 +1158,7 @@ sub change_manifest {
     }
 }
 
-=item $self->_run( $command[, $sub[, @args]] )
+=head2 $self->_run( $command[, $sub[, @args]] )
 
 C<_run()> returns C<< qx( $command ) >> unless C<$sub> is specified.
 If C<$sub> is defined (and a coderef) C<< $sub->( $command, @args ) >> will
@@ -1141,7 +1178,7 @@ sub _run {
     return wantarray ? @output : join " ", @output;
 }
 
-=item $self->_make( $command )
+=head2 $self->_make( $command )
 
 C<_make()> calls C<< run( "make $command" ) >>, and does some extra
 stuff to help MSWin32 (the right maker, the directory).
@@ -1178,7 +1215,7 @@ sub _make {
     return wantarray ? @output : join "", @output;
 }
 
-=item $smoker->_make_fork( $target, $extra )
+=head2 $smoker->_make_fork( $target, $extra )
 
 C<_make_fork()> opens a read pipe to the make command with C<$target>
 and C<$extra> arguments for the make command.
@@ -1206,6 +1243,7 @@ sub _make_fork {
         $ok = open TST, $cmd or $err = $!;
     }
     $ok or do {
+        require Carp;
         Carp::carp("Cannot fork '$cmd': $err");
         return 0;
     };
@@ -1213,7 +1251,7 @@ sub _make_fork {
     return *TST;
 }
 
-=item $smoker->_vms__rooted_logical
+=head2 $smoker->_vms__rooted_logical
 
 This code sets up a rooted logical C<TSP5SRC> and changes the {ddir}
 to that root.
@@ -1231,8 +1269,6 @@ sub _vms_rooted_logical {
 }
 
 1;
-
-=back
 
 =head1 SEE ALSO
 

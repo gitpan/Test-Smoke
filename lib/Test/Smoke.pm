@@ -2,7 +2,7 @@ package Test::Smoke;
 use strict;
 
 use vars qw($VERSION $conf @EXPORT);
-$VERSION  = '1.6';
+$VERSION  = '1.61_03';
 
 use base 'Exporter';
 @EXPORT  = qw( $conf &read_config &run_smoke );
@@ -32,6 +32,8 @@ Test::Smoke - The Perl core test smoke suite
     
 
 =head1 DESCRIPTION
+
+If you are looking to get started, start at the B<README>!
 
 C<Test::Smoke> exports C<$conf> and C<read_config()> by default.
 

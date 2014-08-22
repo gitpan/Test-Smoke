@@ -14,7 +14,7 @@ use base 'Exporter';
 );
 
 @EXPORT_OK = qw(
-    &grepccmsg &get_local_patches &set_local_patch
+    &grepccmsg &grepnonfatal &get_local_patches &set_local_patch
     &get_ncpu &get_smoked_Config &parse_report_Config 
     &get_regen_headers &run_regen_headers
     &whereis &clean_filename &read_logfile
@@ -174,6 +174,7 @@ sub Configure_win32 {
         "-Dusemymalloc"         => "PERL_MALLOC",
         "-Duselargefiles"       => "USE_LARGE_FILES",
         "-Uuseshrplib"          => "BUILD_STATIC",
+        "-UWIN64"               => "WIN64",
         "-DDEBUGGING"           => "USE_DEBUGGING",
         "-DINST_DRV"            => "INST_DRV",
         "-DINST_TOP"            => "INST_TOP",
@@ -182,11 +183,14 @@ sub Configure_win32 {
         "-Dcf_email"            => "EMAIL",
         "-DCCTYPE"              => "CCTYPE",
         "-Dgcc_v3_2"            => "USE_GCC_V3_2",
+        "-DGCC_4XX"             => "GCC_4XX",
+        "-DGCCHELPERDLL"        => "GCCHELPERDLL",
         "-Dbccold"              => "BCCOLD",
         "-DCCHOME"              => "CCHOME",
         "-DIS_WIN95"            => "IS_WIN95",
         "-DCRYPT_SRC"           => "CRYPT_SRC",
         "-DCRYPT_LIB"           => "CRYPT_LIB",
+        "-DEXTRALIBDIRS"        => "EXTRALIBDIRS",
     );
 # %opts hash-values:
 # undef  => leave option as-is when no override (makefile default)
@@ -194,14 +198,14 @@ sub Configure_win32 {
 # (true) => enable option when no override (change value, unless
 #           $key =~ /^(?:PERL|USE)_/) (forced default)
     my %opts = (
-	USE_MULTI	=> 0,
-	USE_ITHREADS	=> 0,
-	USE_IMP_SYS	=> 0,
-	USE_PERLIO	=> 1, # useperlio should be the default!
+        USE_MULTI       => 0, # default define
+        USE_ITHREADS    => 0, # default define
+        USE_IMP_SYS     => 0, # default define
+        USE_PERLIO      => 1, # useperlio should be the default!
+        USE_LARGE_FILES => 0, # default define
         PERL_MALLOC     => 0,
-        USE_LARGE_FILES => 0,
         BUILD_STATIC    => 0,
-	USE_DEBUGGING	=> 0,
+        USE_DEBUGGING   => 0,
         INST_DRV        => undef,
         INST_TOP        => undef,
         INST_VER        => '',
@@ -209,16 +213,25 @@ sub Configure_win32 {
         EMAIL           => undef,  # used to be $smoker,
         CCTYPE          => undef,  # used to be $win32_cctype,
         USE_GCC_V3_2    => 0,
+        GCC_4XX         => 0,
+        GCCHELPERDLL    => undef,
         BCCOLD          => 0,
         CCHOME          => undef,
+        WIN64           => 1,
         IS_WIN95        => 0,
         CRYPT_SRC       => undef,
         CRYPT_LIB       => undef,
+        EXTRALIBDIRS    => undef,
     );
-#    my $def_re = qr/((?:(?:PERL|USE|IS)_\w+)|BCCOLD)/;
-    my $def_re = '((?:(?:PERL|USE|IS)_\w+)|BCCOLD)';
+
+    # $undef_re: regex for options that should be UNcommented for -Uxxx
+    my $undef_re  = qr/WIN64/;
+
+    # $def_re: regex for options that should be UNcommented for -Dxxx
+    my $def_re = qr/((?:(?:PERL|USE|IS|GCC)_\w+)|BCCOLD)/;
+
     my @w32_opts = grep ! /^$def_re/, keys %opts;
-    my $config_args = join " ", 
+    my $config_args = join " ",
         grep /^-[DU][a-z_]+/, quotewords( '\s+', 1, $command );
     push @args, "config_args=$config_args";
 
@@ -226,21 +239,21 @@ sub Configure_win32 {
     $command =~ m{^\s*\./Configure\s+(.*)} or die "unable to parse command";
     my $cmdln = $1;
     foreach ( quotewords( '\s+', 1, $cmdln ) ) {
-	m/^-[des]{1,3}$/ and next;
-	m/^-Dusedevel$/  and next;
+        m/^-[des]{1,3}$/ and next;
+        m/^-Dusedevel$/  and next;
         if ( /^-Accflags=(['"]?)(.+)\1/ ) { #emacs' syntaxhighlite
            push @buildopt, $2;
            next;
         }
         my( $option, $value ) = /^(-[DU]\w+)(?:=(.+))?$/;
-	die "invalid option '$_'" unless exists $opt_map{$option};
-	$opts{$opt_map{$option}} = $value ? $value : 1;
+        die "invalid option '$_'" unless exists $opt_map{$option};
+        $opts{$opt_map{$option}} = $value ? $value : 1;
         $option =~ /^-U/ and $opts{$opt_map{$option}} = 0;
     }
 
     # If you set one, we do all, so you can have fork()
     # unless you set -Uuseimpsys
-    unless ( $cmdln =~ /-Uuseimpsys\b/ ) {
+    if ( $cmdln !~ /-Uuseimpsys\b/ ) {
         if ( $opts{USE_MULTI} || $opts{USE_ITHREADS} || $opts{USE_IMP_SYS} ) {
             $opts{USE_MULTI} = $opts{USE_ITHREADS} = $opts{USE_IMP_SYS} = 1;
         }
@@ -253,6 +266,9 @@ sub Configure_win32 {
     # If you -Dgcc_v3_2 you 'll *want* CCTYPE = GCC
     $opts{CCTYPE} = "GCC" if $opts{USE_GCC_V3_2};
 
+    # If you -DGCC_4XX you 'll *want* CCTYPE = GCC
+    $opts{CCTYPE} = "GCC" if $opts{GCC_4XX};
+
     # If you -Dbccold you 'll *want* CCTYPE = BORLAND
     $opts{CCTYPE} = "BORLAND" if $opts{BCCOLD};
 
@@ -262,7 +278,6 @@ sub Configure_win32 {
 
     open ORG, "< $in"  or die "unable to open '$in': $!";
     open NEW, "> $out" or die "unable to open '$out': $!";
-    binmode NEW;
     my $donot_change = 0;
     while (<ORG>) {
         if ( $donot_change ) {
@@ -271,7 +286,7 @@ sub Configure_win32 {
             if (m/^\s*CFG_VARS\s*=/) {
                 my( $extra_char, $quote ) = $is_nmake
                     ? ( "\t", '"' ) : ("~", "" );
-                $_ .= join "", map "\t\t$quote$_$quote\t${extra_char}\t\\\n", 
+                $_ .= join "", map "\t\t$quote$_$quote\t${extra_char}\t\\\n",
                                    grep /\w+=/, @args;
             }
             print NEW $_;
@@ -281,7 +296,7 @@ sub Configure_win32 {
                 # We will now insert the BULDOPT lines
                 my $bo_tmpl = $win32_maker eq 'nmake'
                     ? "BUILDOPT\t= \$(BUILDOPT) %s" : "BUILDOPT\t+= %s";
-                my $buildopt = join "\n", 
+                my $buildopt = join "\n",
                                     map sprintf( $bo_tmpl, $_ ) => @buildopt;
                 $buildopt and $_ = "$buildopt\n$_\n"
             };
@@ -290,14 +305,20 @@ sub Configure_win32 {
         # Only change config stuff _above_ that line!
         if ( m/^\s*#?\s*$def_re(\s*\*?=\s*define)$/ ) {
             $_ = ($opts{$1} ? "" : "#") . $1 . $2 . "\n";
-        } elsif (m/^\s*#?\s*(CFG\s*\*?=\s*Debug)$/) {
+        }
+        elsif (m/\s*#?\s*($undef_re)(\s*\*?=\s*undef)$/) {
+            $_ = ($opts{$1} ? "#" : "") . "$1$2\n";
+        }
+        elsif (m/^\s*#?\s*(CFG\s*\*?=\s*Debug)$/) {
             $_ = ($opts{USE_DEBUGGING} ? "" : "#") . $1 . "\n";
-        } elsif (m/^\s*#?\s*(BUILD_STATIC)\s*=\s*(.*)$/) {
+        }
+        elsif (m/^\s*#?\s*(BUILD_STATIC)\s*=\s*(.*)$/) {
             my( $macro, $mval ) = ( $1, $2 );
             if ( $config_args =~ /-([UD])useshrplib\b/ ) {
                 $_ = ( $1 eq 'D' ? "#" : "" ) . "$macro = $mval\n";
             }
-        } else {
+        }
+        else {
             foreach my $cfg_var ( grep defined $opts{ $_ }, @w32_opts ) {
                 if (  m/^\s*#?\s*($cfg_var\s*\*?=)\s*(.*)$/ ) {
                     $_ =  $opts{ $cfg_var } ?
@@ -307,7 +328,7 @@ sub Configure_win32 {
                 }
             }
         }
-	print NEW $_;
+        print NEW $_;
     }
     close ORG;
     close NEW;
@@ -383,21 +404,20 @@ read the logfile
 
 =cut
 
-sub read_logfile
-{
-    my ($self, $logfile) = @_;
+sub read_logfile {
+    my ($logfile, $verbose) = @_;
+    return if ! defined $logfile;
 
-    !$logfile && $self && $self->{log_file} and return $self->{log_file};
-
-    $logfile ||= $self->{lfile} or return undef;
     open my $fh, "<", $logfile  or return undef;
-
-    local $/;
-    my $log = <$fh>;
-    my $es; eval { $es = decode( "utf-8",  $log, Encode::FB_CROAK ); };
-    $@ and  eval { $es = decode( "cp1252", $log, Encode::FB_CROAK ); };
+    my $log = do { local $/; <$fh> };
     close $fh;
-    return($@ ? $log : $es);
+
+    my $es = eval { decode("utf-8",  $log, Encode::FB_CROAK ) };
+    $@   and eval { $es = decode("cp1252",     $log, Encode::FB_CROAK ) };
+    $@   and eval { $es = decode("iso-8859-1", $log, Encode::FB_CROAK ) };
+
+    warn("Couldn't decode logfile($logfile): $@") if $@;
+    return $@ ? $log : $es;
 }
 
 =head2 grepccmsg( $cc, $logfile, $verbose )
@@ -407,11 +427,11 @@ This is a port of Jarkko Hietaniemi's grepccerr script.
 =cut
 
 sub grepccmsg {
-    my( $cc, $logfile, $verbose ) = @_;
-    defined $logfile or return;
-    $cc ||= 'gcc';
+    my( $cc, $smokelog, $verbose ) = @_;
+    defined $smokelog or return;
+    $cc = 'gcc' if !$cc || $cc eq 'g++';
     my %OS2PAT = (
-        'aix' => 
+        'aix' =>
             # "foo.c", line n.c: pppp-qqq (W) ...error description...
             # "foo.c", line n.c: pppp-qqq (S) ...error description...
             '(^".+?", line \d+\.\d+: \d+-\d+ \([WS]\) .+?$)',
@@ -472,7 +492,7 @@ sub grepccmsg {
             # foo.c(:nn)?: undefined reference to ...
             '(^(?-s:.+?):(?: In function .+?:$|' .
                '(?: undefined reference to .+?$)|' .
-               '\d+(?:\:\d+)?: ' . '(?:warning:|error:|invalid) .+?$))',
+               '\d+(?:\:\d+)?: ' . '(?:warning:|error:|note:|invalid) .+?$))',
 
         'mswin32' => # MSVC(?:60)*
             # foo.c : error LNKnnn: error description
@@ -484,20 +504,23 @@ sub grepccmsg {
             # Warning Wnnn filename line: warning description
             # Error Ennn:: error description
             '(^(?:(?:Warning W)|(?:Error E))\d+ .+? \d+: .+?$)',
+
+	'icc' => # Intel C on Linux
+	    # pp_sys.c(4412): warning #num: text
+            #       SETi( getpriority(which, who) );
+            #       ^
+	    '(^.*?\([0-9]+\): (?:warning #[0-9]+|error): .+$)',
+	'icpc' => # Intel C++
+	    '(^.*?\([0-9]+\): (?:warning #[0-9]+|error): .+$)',
     );
     exists $OS2PAT{ lc $cc } or $cc = 'gcc';
     my $pat = $OS2PAT{ lc $cc };
 
     my( $indx, %error ) = ( 1 );
-    my $smokelog = '';
-    my $log = read_logfile(undef,$logfile);
-    if ($log) {
-	$smokelog = $log;
-        $verbose and print "Read logfile '$logfile'\n";
+    if ($smokelog) {
         $verbose and print "Pattern($cc): /$pat/\n";
     } else {
-        $verbose and print "Skipping '$logfile' '$!'\n";
-        $error{ "Couldn't examine '$logfile' for compiler warnings." } = 1;
+        $error{ "Couldn't examine logfile for compiler warnings." } = 1;
     }
 
     while ($smokelog =~ m/$pat/mg) {
@@ -512,6 +535,37 @@ sub grepccmsg {
         #     $msg =~ m/cc-(?:1009|1110|1047) / and next;
 
         $error{ $msg } ||= $indx++;
+    }
+
+    my @errors = sort { $error{ $a } <=> $error{ $b } } keys %error;
+
+    return wantarray ? @errors : \@errors;
+}
+
+=head2 grepnonfatal( $cc, $logfile, $verbose )
+
+This is a way to find known failures that do not cause the tests to
+fail but are important enough to report, like being unable to install
+manual pages.
+
+=cut
+
+sub grepnonfatal {
+    my( $cc, $smokelog, $verbose ) = @_;
+    $smokelog or return;
+
+    my( $indx, %error ) = ( 1 );
+
+    my $kf = qr{
+        # Pod::Man is not available: Can't load module Encode, dynamic loading not available in this perl.
+        (\b (\S+) (?-x: is not available: Can't load module )
+            (\S+?) , (?-x: dynamic loading not available) )
+    }xi;
+
+    while ($smokelog =~ m{$kf}g) {
+        my $fail = $1; # $2 = "Pod::Man", $3 = "Encode"
+
+        $error{ $fail } ||= $indx++;
     }
 
     my @errors = sort { $error{ $a } <=> $error{ $b } } keys %error;
@@ -772,11 +826,11 @@ sub version_from_patchlevel_h {
             return "$revision.$version$subversion";
         }
 
-        $revision   = $patchlevel =~ /^#define PERL_REVISION\s+(\d+)/m 
+        $revision   = $patchlevel =~ /^#define PERL_REVISION\s+(\d+)/m
                     ? $1 : '?';
         $version    = $patchlevel =~ /^#define PERL_VERSION\s+(\d+)/m
                     ? $1 : '?';
-        $subversion = $patchlevel =~ /^#define PERL_SUBVERSION\s+(\d+)/m 
+        $subversion = $patchlevel =~ /^#define PERL_SUBVERSION\s+(\d+)/m
                     ? $1 : '?';
     }
     return "$revision.$version.$subversion";
@@ -836,7 +890,7 @@ sub get_ncpu {
             my @output = grep /^processor/ => `ioscan -fnkC processor`;
             $cpus = scalar @output;
             last OS_CHECK;
-	};
+        };
 
         /irix/i && do {
             my @output = grep /\s+processors?$/i => `hinv -c processor`;
@@ -852,7 +906,7 @@ sub get_ncpu {
             }
             $cpus = @output ? scalar @output : '';
             last OS_CHECK;
-	};
+        };
 
         /solaris|sunos|osf/i && do {
             my @output = grep /on-line/ => `psrinfo`;
@@ -870,6 +924,15 @@ sub get_ncpu {
             my @output = grep /CPU \d+ is in RUN state/ => `show cpu/active`;
             $cpus = @output ? scalar @output : '';
             last OS_CHECK;
+        };
+
+        /haiku/i && do {
+            eval { require Haiku::SysInfo };
+            if (!$@) {
+                my $hsi = Haiku::SysInfo->new();
+                $cpus = $hsi->cpu_count();
+                last OS_CHECK;
+            }
         };
 
         $cpus = "";
@@ -1209,7 +1272,7 @@ sub time_in_hhmm {
     return join " ", @parts;
 }
 
-=head2 do_pod2man( %pod2usage_options )
+=head2 do_pod2usage( %pod2usage_options )
 
 If L<Pod::Usage> is there then call its C<pod2usage()>.
 In the other case, print the general message passed with the C<myusage> key.
@@ -1268,6 +1331,8 @@ sub skip_filter {
     local( $_ ) = @_;
     # Still to be extended
     return m,^ *$, ||
+    m,^\t, ||
+    m,^PERL=./perl\s+./runtests choose, ||
     m,^	AutoSplitting, ||
     m,^\./miniperl , ||
     m,^\s*autosplit_lib, ||
@@ -1284,7 +1349,7 @@ sub skip_filter {
     m,^lib/ftmp-security....File::Temp::_gettemp: Parent directory \((\.|/tmp/)\) is not safe, ||
     m,^File::Temp::_gettemp: Parent directory \((\.|/tmp/)\) is not safe, ||
     m,^ok$, ||
-    m,^[-a-zA-Z0-9_/]+\.*(ok|skipping test on this platform)$, ||
+    m,^[-a-zA-Z0-9_/.]+\s*\.*\s*(ok|skipped|skipping test on this platform)$, ||
     m,^(xlc|cc_r) -c , ||
 #    m,^\s+$testdir/, ||
     m,^sh mv-if-diff\b, ||
@@ -1315,7 +1380,6 @@ sub skip_filter {
     m,dmake\.exe:?\s+-S, ||
     m,^\s+\d+/\d+ skipped: , ||
     m,^\s+all skipped: , ||
-    m,\.+skipped$, ||
     m,^\s*pl2bat\.bat [\w\\]+, ||
     m,^Making , ||
     m,^Skip , ||
@@ -1327,7 +1391,7 @@ sub skip_filter {
 
 =head1 COPYRIGHT
 
-(c) 2001-2003, All rights reserved.
+(c) 2001-2014, All rights reserved.
 
   * H. Merijn Brand <h.m.brand@hccnet.nl>
   * Nicholas Clark <nick@unfortu.net>

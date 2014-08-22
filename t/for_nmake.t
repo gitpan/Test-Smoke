@@ -1,11 +1,9 @@
 #! perl -w
 use strict;
 
-# $Id$
-
 use File::Spec;
 
-use Test::More tests => 71;
+use Test::More tests => 77;
 BEGIN { use_ok( 'Test::Smoke::Util' ); }
 END { 
     1 while unlink 'win32/smoke.mk';
@@ -25,11 +23,6 @@ my $config   = $dft_args .
 Configure_win32( './Configure ' . $config, 'nmake' );
 
 ok( -f $smoke_mk, "New makefile ($config)" );
-my $extra_len = length( "\t\tconfig_args=$dft_args\t~\t\\\n" );
-is( -s 'win32/Makefile', (-s $smoke_mk ) - $extra_len,
-    "Sizes are equal for standard options (-Duseithreads)" );
-
-# Now we can start testing this stuff
 ok( my_unlink( $smoke_mk ), "Remove makefile" );
 
 $config =  '-DINST_DRV=F:';
@@ -288,6 +281,25 @@ SKIP: {
 
     #These should be unset
     like( $makefile, '/^BUILD_STATIC\s*= define\n/m', '$(BUILD_STATIC)' );
+}
+
+ok( my_unlink( $smoke_mk ), "Remove makefile" );
+
+note("Testing -Duseithreads -UWIN64...");
+$config = $dft_args . " -UWIN64";
+Configure_win32( './Configure ' . $config, 'dmake' );
+ok( -f $smoke_mk, "New makefile ($config)" );
+SKIP: {
+    local *MF;
+    ok open(MF, "< $smoke_mk"), "Opening makefile" or
+        skip "Cannot read from '$smoke_mk': $!", 1;
+    my $makefile = do { local $/; <MF> };
+    close MF;
+
+    like($makefile, '/^USE_MULTI\s*\*= define\n/m',       '$(USE_MULTI)');
+    like($makefile, '/^USE_ITHREADS\s*\*= define\n/m',    '$(USE_ITHREADS)');
+    like($makefile, '/^USE_LARGE_FILES\s*\*= define\n/m', '$(USE_LARGE_FILES)');
+    like($makefile, '/^WIN64\s*\*= undef\n/m',            '$(WIN64)');
 }
 
 ok( my_unlink( $smoke_mk ), "Remove makefile" );
